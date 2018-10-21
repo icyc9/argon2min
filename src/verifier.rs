@@ -96,6 +96,15 @@ struct Parser<'a> {
     pos: usize,
 }
 
+impl<'a> fmt::Debug for Parser<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", String::from_utf8_lossy(&self.enc[..self.pos]))?;
+        write!(f, "<-- {} -->", self.pos)?;
+        write!(f, "{:?}", String::from_utf8_lossy(&self.enc[self.pos..]))?;
+        Ok(())
+    }
+}
+
 type Parsed<T> = Result<T, usize>;
 
 impl<'a> Parser<'a> {
@@ -158,13 +167,29 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn decode64_till(&mut self, stopchar: Option<&[u8]>) -> Parsed<Vec<u8>> {
+    fn decode64_till_one_of(&mut self, char_set: &[u8]) -> Parsed<Vec<u8>> {
+        let end = self.enc[self.pos..]
+            .iter()
+            .position(|c| char_set.contains(c))
+            .map(|sub_pos| self.pos + sub_pos)
+            .unwrap_or_else(|| self.enc.len());
+
+        match debase64_no_pad(&self.enc[self.pos..end]) {
+            None => self.err(),
+            Some(rv) => {
+                self.pos = end;
+                Ok(rv)
+            }
+        }
+    }
+
+    fn decode64_till(&mut self, stopchar: Option<u8>) -> Parsed<Vec<u8>> {
         let end = match stopchar {
             None => self.enc.len(),
             Some(c) => {
                 self.enc[self.pos..]
                     .iter()
-                    .take_while(|k| **k != c[0])
+                    .take_while(|k| **k != c)
                     .fold(0, |c, _| c + 1)
                     + self.pos
             }
@@ -281,18 +306,18 @@ impl Encoded {
 
         let key = match p.expect(b",keyid=") {
             Err(_) => vec![],
-            Ok(()) => try!(p.decode64_till(Some(b","))),
+            Ok(()) => p.decode64_till_one_of(b",$")?,
         };
 
         let data = match p.expect(b",data=") {
-            Ok(()) => try!(p.decode64_till(Some(b"$"))),
+            Ok(()) => p.decode64_till(Some(b'$'))?,
             Err(_) => vec![],
         };
 
         try_unit!(p.expect(b"$"));
-        let salt = try!(p.decode64_till(Some(b"$")));
+        let salt = p.decode64_till(Some(b'$'))?;
         try_unit!(p.expect(b"$"));
-        let hash = try!(p.decode64_till(None));
+        let hash = p.decode64_till(None)?;
         Ok((variant, vers, kib, passes, lanes, key, data, salt, hash))
     }
 
