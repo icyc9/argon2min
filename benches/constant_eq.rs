@@ -2,9 +2,9 @@
 // run time of `verifier::constant_eq` is independent of its inputs.
 #![feature(test)]
 
-extern crate argon2rs;
+extern crate argon2min;
 extern crate test;
-use argon2rs::verifier::constant_eq;
+use argon2min::verifier::constant_eq;
 
 #[bench]
 fn param_are_equal(b: &mut test::Bencher) {

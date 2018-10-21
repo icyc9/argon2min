@@ -1,26 +1,24 @@
-argon2rs
+argon2min
 ========
 
-[![Build
-Status](https://travis-ci.org/bryant/argon2rs.svg?branch=master)](https://travis-ci.org/bryant/argon2rs)
+[![()
+Status](https://travis-ci.org/FauxFaux/argon2min.svg)](https://travis-ci.org/FauxFaux/argon2min)
 
 This is a purely Rust-based library that provides both variants of the
 state-of-the-art Argon2 hashing algorithm, suitable for password hashing and
 password-based key derivation.
-
-[Documentation](http://bryant.github.io/argon2rs/argon2rs/)
 
 ## Usage
 
 From `examples/helloworld.rs`:
 
 ```rust
-extern crate argon2rs;
+extern crate argon2min;
 
 pub fn main() {
     let (password, salt) = ("argon2i!", "delicious salt");
     println!("argon2i_simple(\"{}\", \"{}\"):", password, salt);
-    for byte in argon2rs::argon2i_simple(&password, &salt).iter() {
+    for byte in argon2min::argon2i_simple(&password, &salt).iter() {
         print!("{:02x}", byte);
     }
     println!("");
@@ -72,7 +70,7 @@ $ cargo bench --features="bench_ref"
 
 running 5 tests
 test ensure_identical_hashes ... ignored
-test bench_argon2rs_i ... bench:   6,856,774 ns/iter (+/- 197,405)
+test bench_argon2min_i ... bench:   6,856,774 ns/iter (+/- 197,405)
 test bench_cargon_i   ... bench:   3,856,783 ns/iter (+/- 142,580)
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 2 measured

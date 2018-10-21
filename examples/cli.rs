@@ -1,6 +1,6 @@
-extern crate argon2rs;
+extern crate argon2min;
 
-use argon2rs::{Argon2, Variant};
+use argon2min::{Argon2, Variant};
 use std::env;
 use std::io::{stdin, Read};
 use std::string::String;
@@ -13,7 +13,7 @@ fn that_cli_tool(
     passes: u32,
     lanes: u32,
     logkib: u32,
-) -> [u8; argon2rs::defaults::LENGTH] {
+) -> [u8; argon2min::defaults::LENGTH] {
     assert!(salt.len() <= CLI_TOOL_SALT_LEN && passes > 0 && logkib > 0 && lanes > 0);
     let a = Argon2::new(passes, lanes, 1 << logkib, Variant::Argon2i)
         .ok()
@@ -23,7 +23,7 @@ fn that_cli_tool(
         *k = v;
     }
 
-    let mut out = [0 as u8; argon2rs::defaults::LENGTH];
+    let mut out = [0 as u8; argon2min::defaults::LENGTH];
     a.hash(&mut out, msg, &s, &[], &[]);
     out
 }

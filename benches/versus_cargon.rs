@@ -1,22 +1,22 @@
-// benches argon2rs against the reference c implementation at
+// benches argon2min against the reference c implementation at
 // https://github.com/p-h-c/phc-winner-argon2
 
 #![feature(test)]
 #![cfg(feature = "bench_ref")]
 
-extern crate argon2rs;
+extern crate argon2min;
 extern crate cargon;
 extern crate test;
 
-use argon2rs::Variant::Argon2i;
-use argon2rs::{defaults, Argon2};
+use argon2min::Variant::Argon2i;
+use argon2min::{defaults, Argon2};
 use std::ptr;
 
 const PASSWORD: &'static [u8] = b"cargo bench --feature=confusion";
 const SALT: &'static [u8] = b"cargo test --release";
 
 #[bench]
-fn bench_argon2rs_i(b: &mut test::Bencher) {
+fn bench_argon2min_i(b: &mut test::Bencher) {
     let a2 = Argon2::default(Argon2i);
     let mut out = [0; defaults::LENGTH];
     b.iter(|| a2.hash(&mut out, PASSWORD, SALT, &[], &[]));

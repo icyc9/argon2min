@@ -1,12 +1,11 @@
 [package]
-name = "argon2rs"
-version = "0.2.5"
-authors = ["bryant <bryant@defrag.in>"]
-repository = "https://github.com/bryant/argon2rs"
-documentation = "http://bryant.github.io/argon2rs/argon2rs/"
+name = "argon2min"
+version = "0.3.0"
+authors = ["Chris West <git@goeswhere.com>", "bryant <bryant@defrag.in>"]
+repository = "https://github.com/FauxFaux/argon2min"
 description = "The pure Rust password hashing library that runs on Argon2."
 readme = "README.md"
-keywords = ["crypto", "argon2", "argon2i", "argon2d", "hash"]
+keywords = ["crypto", "argon2", "argon2i", "argon2d", "argon2id", "hash"]
 license = "MIT"
 
 [features]

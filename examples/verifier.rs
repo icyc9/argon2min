@@ -1,7 +1,7 @@
-extern crate argon2rs;
-use argon2rs::defaults::{KIB, LANES, PASSES};
-use argon2rs::verifier::Encoded;
-use argon2rs::{Argon2, Variant};
+extern crate argon2min;
+use argon2min::defaults::{KIB, LANES, PASSES};
+use argon2min::verifier::Encoded;
+use argon2min::{Argon2, Variant};
 
 pub fn main() {
     // A typical password hashing scenario:

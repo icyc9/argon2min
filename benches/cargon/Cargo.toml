@@ -1,11 +1,10 @@
 [package]
 name = "cargon"
-description = "Thin wrapper around the Argon2 C library. Used in argon2rs' bench suite."
+description = "Thin wrapper around the Argon2 C library"
 license = "WTFPL"
 authors = ["bryant <bryant@users.noreply.github.com>"]
 version = "0.0.1"
-repository = "https://github.com/bryant/argon2rs"
-documentation = "http://bryant.github.io/argon2rs/argon2rs/"
+repository = "https://github.com/FauxFaux/argon2min"
 build = "build.rs"
 
 

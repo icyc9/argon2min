@@ -142,7 +142,7 @@ impl Argon2 {
     /// this forces hashing to take longer. Must be between 1 and 2^32 - 1.
     ///
     /// `lanes`: The degree of parallelism by which memory is filled during hash
-    /// computation. Setting this to N instructs argon2rs to partition the block
+    /// computation. Setting this to N instructs argon2min to partition the block
     /// matrix into N lanes, simultaneously filling each lane in parallel with N
     /// threads. Must be between 1 and 2^24 - 1.
     ///
@@ -174,12 +174,12 @@ impl Argon2 {
             Result::Err(ParamErr::MinKiB(8 * lanes as u64))
         } else {
             Result::Ok(Argon2 {
-                passes: passes,
-                lanes: lanes,
+                passes,
+                lanes,
                 lanelen: kib / (4 * lanes) * 4,
-                kib: kib,
-                variant: variant,
-                version: version,
+                kib,
+                variant,
+                version,
             })
         }
     }
