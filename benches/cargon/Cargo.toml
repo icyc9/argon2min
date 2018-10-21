@@ -8,8 +8,6 @@ repository = "https://github.com/bryant/argon2rs"
 documentation = "http://bryant.github.io/argon2rs/argon2rs/"
 build = "build.rs"
 
-[lib]
-path = "lib.rs"
 
 [build-dependencies]
-gcc = "0.3.*"
+cc = "1"

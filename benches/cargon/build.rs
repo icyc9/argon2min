@@ -1,8 +1,8 @@
-extern crate gcc;
+extern crate cc;
 
 fn main() {
     let cargon_root = std::path::Path::new("phc-winner-argon2");
-    let mut cfg = gcc::Config::new();
+    let mut cfg = cc::Build::new();
 
     for src in &["argon2.c",
                  "core.c",
