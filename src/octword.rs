@@ -4,31 +4,6 @@ use std::ops::{Add, BitXor, Mul};
 #[allow(non_camel_case_types)]
 pub struct u64x2(pub u64, pub u64);
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[allow(non_camel_case_types)]
-struct u32x4(u32, u32, u32, u32);
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[allow(non_camel_case_types)]
-struct u8x16(
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-    u8,
-);
-
 impl Add for u64x2 {
     type Output = Self;
     fn add(self, r: Self) -> Self {
