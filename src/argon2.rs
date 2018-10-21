@@ -5,7 +5,6 @@ use block::{Block, Matrix, ARGON2_BLOCK_BYTES};
 use octword::u64x2;
 use std::error::Error;
 use std::{fmt, mem};
-use workers::Workers;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Variant {
@@ -210,23 +209,23 @@ impl Argon2 {
                     self.version as u32, self.variant, p, s, k, x);
         h0_fn(&h0);  // kats
 
-        let mut workers = Workers::new(self.lanes);
-
-        workers.map(&mut blocks,
-                    &|bref, lane| self.fill_first_slice(bref, h0, lane));
+        for lane in 0..self.lanes {
+               self.fill_first_slice(&mut blocks, h0, lane);
+        }
 
         // finish first pass. slices have to be filled in sync.
         for slice in 1..SLICES_PER_LANE {
-            workers.map(&mut blocks,
-                        &|bref, lane| self.fill_slice(bref, 0, lane, slice, 0));
+            for lane in 0..self.lanes {
+                self.fill_slice(&mut blocks, 0, lane, slice, 0);
+            }
         }
         pass_fn(0, &blocks);  // kats
 
         for p in 1..self.passes {
             for slice in 0..SLICES_PER_LANE {
-                workers.map(&mut blocks, &|bref, lane| {
-                    self.fill_slice(bref, p, lane, slice, 0)
-                });
+                for lane in 0..self.lanes {
+                    self.fill_slice(&mut blocks, p, lane, slice, 0);
+                }
             }
             pass_fn(p, &blocks);  // kats
         }

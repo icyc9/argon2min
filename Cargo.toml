@@ -9,6 +9,9 @@ readme = "README.md"
 keywords = ["crypto", "argon2", "argon2i", "argon2d", "hash"]
 license = "MIT"
 
+[features]
+bench_ref = []
+
 [dependencies]
 blake2-rfc = "0.2.18"
 
