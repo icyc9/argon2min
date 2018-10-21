@@ -142,10 +142,6 @@ impl Matrix {
         unsafe { (&mut (*p)[wr], &(*p)[rd0], &(*p)[rd1]) }
     }
 
-    pub unsafe fn mut_ref<'a>(&mut self) -> &'a mut Self {
-        &mut *(self as *mut Self)
-    }
-
     // Xors the Blocks of column `col` together.
     pub fn xor_column(&self, col: u32) -> Block {
         debug_assert!(col < self.lanelen);

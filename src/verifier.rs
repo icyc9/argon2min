@@ -32,13 +32,13 @@ fn delut(c: u8) -> Option<u8> {
 }
 
 fn quad(n: &[u8]) -> [u8; 4] {
-    assert!(n.len() == 3);
+    assert_eq!(n.len(), 3);
     let (b, c) = (n[1] >> 4 | n[0] << 4, n[2] >> 6 | n[1] << 2);
     [lut(n[0] >> 2), lut(b), lut(c), lut(n[2])]
 }
 
 fn triplet(n: &[u8]) -> Option<[u8; 3]> {
-    assert!(n.len() == 4);
+    assert_eq!(n.len(), 4);
     let a = maybe!(delut(n[0]));
     let b = maybe!(delut(n[1]));
     let c = maybe!(delut(n[2]));
@@ -117,18 +117,6 @@ impl<'a> Parser<'a> {
             self.pos += exp.len();
             Ok(())
         }
-    }
-
-    fn one_of(&mut self, chars: &[u8]) -> Parsed<u8> {
-        if self.enc.len() > 0 {
-            for &c in chars {
-                if c == self.enc[self.pos] {
-                    self.pos += 1;
-                    return Ok(c);
-                }
-            }
-        }
-        self.err()
     }
 
     fn read_until(&mut self, stopchar: u8) -> &'a [u8] {
