@@ -6,9 +6,15 @@ use std::slice::{Iter, IterMut};
 pub const ARGON2_BLOCK_BYTES: usize = 1024;
 
 macro_rules! per_kib {
-    (u8) => { ARGON2_BLOCK_BYTES };
-    (u64) => { ARGON2_BLOCK_BYTES / 8 };
-    (u64x2) => { ARGON2_BLOCK_BYTES / 16 };
+    (u8) => {
+        ARGON2_BLOCK_BYTES
+    };
+    (u64) => {
+        ARGON2_BLOCK_BYTES / 8
+    };
+    (u64x2) => {
+        ARGON2_BLOCK_BYTES / 16
+    };
 }
 
 pub struct Block([u64x2; per_kib!(u64x2)]);
@@ -22,13 +28,16 @@ impl Clone for Block {
 }
 
 impl Block {
-    pub fn iter_mut(&mut self) -> IterMut<u64x2> { self.0.iter_mut() }
+    pub fn iter_mut(&mut self) -> IterMut<u64x2> {
+        self.0.iter_mut()
+    }
 
-    pub fn iter(&self) -> Iter<u64x2> { self.0.iter() }
+    pub fn iter(&self) -> Iter<u64x2> {
+        self.0.iter()
+    }
 
     pub fn as_u8_mut(&mut self) -> &mut [u8] {
-        let rv: &mut [u8; per_kib!(u8)] =
-            unsafe { mem::transmute(&mut self.0) };
+        let rv: &mut [u8; per_kib!(u8)] = unsafe { mem::transmute(&mut self.0) };
         rv
     }
 
@@ -76,7 +85,9 @@ impl IndexMut<usize> for Block {
     }
 }
 
-pub fn zero() -> Block { Block([u64x2(0, 0); per_kib!(u64x2)]) }
+pub fn zero() -> Block {
+    Block([u64x2(0, 0); per_kib!(u64x2)])
+}
 
 pub struct Matrix {
     blocks: Vec<Block>,
@@ -92,8 +103,8 @@ impl Index<(u32, u32)> for Matrix {
         let (row, col) = idx;
         debug_assert!(row < self.lanes && col < self.lanelen);
         unsafe {
-            self.blocks.get_unchecked(row as usize * self.lanelen as usize +
-                                      col as usize)
+            self.blocks
+                .get_unchecked(row as usize * self.lanelen as usize + col as usize)
         }
     }
 }
@@ -104,8 +115,8 @@ impl IndexMut<(u32, u32)> for Matrix {
         let (row, col) = idx;
         debug_assert!(row < self.lanes && col < self.lanelen);
         unsafe {
-            self.blocks.get_unchecked_mut(row as usize * self.lanelen as usize +
-                                          col as usize)
+            self.blocks
+                .get_unchecked_mut(row as usize * self.lanelen as usize + col as usize)
         }
     }
 }
@@ -120,8 +131,12 @@ impl Matrix {
         }
     }
 
-    pub fn get3(&mut self, wr: (u32, u32), rd0: (u32, u32), rd1: (u32, u32))
-                -> (&mut Block, &Block, &Block) {
+    pub fn get3(
+        &mut self,
+        wr: (u32, u32),
+        rd0: (u32, u32),
+        rd1: (u32, u32),
+    ) -> (&mut Block, &Block, &Block) {
         assert!(wr != rd0 && wr != rd1);
         let p: *mut Matrix = self;
         unsafe { (&mut (*p)[wr], &(*p)[rd0], &(*p)[rd1]) }
@@ -141,7 +156,9 @@ impl Matrix {
         rv
     }
 
-    pub fn iter(&self) -> Iter<Block> { self.blocks.iter() }
+    pub fn iter(&self) -> Iter<Block> {
+        self.blocks.iter()
+    }
 }
 
 impl Drop for Matrix {

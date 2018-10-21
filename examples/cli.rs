@@ -1,19 +1,23 @@
 extern crate argon2rs;
 
 use argon2rs::{Argon2, Variant};
-use std::string::String;
 use std::env;
-use std::io::{Read, stdin};
+use std::io::{stdin, Read};
+use std::string::String;
 
 const CLI_TOOL_SALT_LEN: usize = 16;
 
-fn that_cli_tool(msg: &[u8], salt: &[u8], passes: u32, lanes: u32, logkib: u32)
-                 -> [u8; argon2rs::defaults::LENGTH] {
-    assert!(salt.len() <= CLI_TOOL_SALT_LEN && passes > 0 && logkib > 0 &&
-            lanes > 0);
+fn that_cli_tool(
+    msg: &[u8],
+    salt: &[u8],
+    passes: u32,
+    lanes: u32,
+    logkib: u32,
+) -> [u8; argon2rs::defaults::LENGTH] {
+    assert!(salt.len() <= CLI_TOOL_SALT_LEN && passes > 0 && logkib > 0 && lanes > 0);
     let a = Argon2::new(passes, lanes, 1 << logkib, Variant::Argon2i)
-                .ok()
-                .unwrap();
+        .ok()
+        .unwrap();
     let mut s = [0; CLI_TOOL_SALT_LEN];
     for (&v, mut k) in salt.iter().zip(s.iter_mut()) {
         *k = v;
@@ -33,8 +37,11 @@ fn main() {
 
     if args.len() != 5 {
         println!("Usage: {} passes lanes logkib salt", args[0]);
-        println!("where salt.len() <= {}, memory usage is 2^logkib, and \
-                  plaintext is read from stdin.", CLI_TOOL_SALT_LEN);
+        println!(
+            "where salt.len() <= {}, memory usage is 2^logkib, and \
+             plaintext is read from stdin.",
+            CLI_TOOL_SALT_LEN
+        );
         return;
     }
 

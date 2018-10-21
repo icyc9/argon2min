@@ -1,10 +1,10 @@
 extern crate blake2_rfc;
 
-use std::{fmt, mem};
-use std::error::Error;
 use self::blake2_rfc::blake2b::Blake2b;
+use block::{Block, Matrix, ARGON2_BLOCK_BYTES};
 use octword::u64x2;
-use block::{ARGON2_BLOCK_BYTES, Block, Matrix};
+use std::error::Error;
+use std::{fmt, mem};
 use workers::Workers;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -32,9 +32,13 @@ fn split_u64(n: u64) -> (u32, u32) {
     ((n & 0xffffffff) as u32, (n >> 32) as u32)
 }
 
-fn as32le(k: u32) -> [u8; 4] { unsafe { mem::transmute(k.to_le()) } }
+fn as32le(k: u32) -> [u8; 4] {
+    unsafe { mem::transmute(k.to_le()) }
+}
 
-fn len32(t: &[u8]) -> [u8; 4] { as32le(t.len() as u32) }
+fn len32(t: &[u8]) -> [u8; 4] {
+    as32le(t.len() as u32)
+}
 
 macro_rules! b2hash {
     ($($bytes: expr),*) => {
@@ -98,9 +102,7 @@ impl fmt::Display for ParamErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use ParamErr::*;
         match *self {
-            TooFewPasses | TooFewLanes | TooManyLanes => {
-                write!(f, "{}", self.description())
-            }
+            TooFewPasses | TooFewLanes | TooManyLanes => write!(f, "{}", self.description()),
             MinKiB(k) => write!(f, "Memory parameter must be >= {} KiB.", k),
         }
     }
@@ -111,9 +113,7 @@ impl Error for ParamErr {
         use ParamErr::*;
         match *self {
             TooFewPasses => "Argon2 requires one or more passes to be run.",
-            TooFewLanes | TooManyLanes => {
-                "The number of lanes must be between one and 2^24 - 1."
-            }
+            TooFewLanes | TooManyLanes => "The number of lanes must be between one and 2^24 - 1.",
             MinKiB(_) => "Specified size of block matrix was too small.",
         }
     }
@@ -144,16 +144,19 @@ impl Argon2 {
     /// thwart ASIC-based attacks. Must be >= 8 * lanes.
     ///
     /// `variant`: Set this to `Variant::Argon2i` when hashing passwords.
-    pub fn new(passes: u32, lanes: u32, kib: u32, variant: Variant)
-               -> Result<Argon2, ParamErr> {
+    pub fn new(passes: u32, lanes: u32, kib: u32, variant: Variant) -> Result<Argon2, ParamErr> {
         Argon2::with_version(passes, lanes, kib, variant, Version::_0x13)
     }
 
     // This entry point exists to allow the verifier to verify hash encodings
     // that were generated with legacy versions of Argon2.
-    pub(crate) fn with_version(passes: u32, lanes: u32, kib: u32,
-                               variant: Variant, version: Version)
-                               -> Result<Argon2, ParamErr> {
+    pub(crate) fn with_version(
+        passes: u32,
+        lanes: u32,
+        kib: u32,
+        variant: Variant,
+        version: Version,
+    ) -> Result<Argon2, ParamErr> {
         if passes < 1 {
             Result::Err(ParamErr::TooFewPasses)
         } else if lanes < 1 {
@@ -291,8 +294,16 @@ impl Argon2 {
         }
     }
 
-    fn fill_block(&self, blks: &mut Matrix, pass: u32, lane: u32, slice: u32,
-                  idx: u32, j1: u32, j2: u32) {
+    fn fill_block(
+        &self,
+        blks: &mut Matrix,
+        pass: u32,
+        lane: u32,
+        slice: u32,
+        idx: u32,
+        j1: u32,
+        j2: u32,
+    ) {
         let slicelen = self.lanelen / SLICES_PER_LANE;
         let ls = self.lanes;
         let z = index_alpha(pass, lane, slice, ls, idx, slicelen, j1, j2);
@@ -312,13 +323,23 @@ impl Argon2 {
     }
 
     fn prev(&self, n: u32) -> u32 {
-        if n > 0 { n - 1 } else { self.lanelen - 1 }
+        if n > 0 {
+            n - 1
+        } else {
+            self.lanelen - 1
+        }
     }
 
     /// Provides read-only access to `(variant, kibibytes, passes, lanes,
     /// version)`. The version should always be 0x13.
     pub fn params(&self) -> (Variant, u32, u32, u32, Version) {
-        (self.variant, self.kib, self.passes, self.lanes, self.version)
+        (
+            self.variant,
+            self.kib,
+            self.passes,
+            self.lanes,
+            self.version,
+        )
     }
 }
 
@@ -326,7 +347,9 @@ impl Argon2 {
 /// a password and salt are supplied. Note that a salt between 8 and 2^32 - 1
 /// bytes must be provided.
 pub fn argon2i_simple<P, S>(password: &P, salt: &S) -> [u8; defaults::LENGTH]
-    where P: AsRef<[u8]> + ?Sized, S: AsRef<[u8]> + ?Sized
+where
+    P: AsRef<[u8]> + ?Sized,
+    S: AsRef<[u8]> + ?Sized,
 {
     let mut out = [0; defaults::LENGTH];
     let a2 = Argon2::default(Variant::Argon2i);
@@ -338,7 +361,9 @@ pub fn argon2i_simple<P, S>(password: &P, salt: &S) -> [u8; defaults::LENGTH]
 /// a password and salt are supplied. Note that a salt between 8 and 2^32 - 1
 /// bytes must be provided.
 pub fn argon2d_simple<P, S>(password: &P, salt: &S) -> [u8; defaults::LENGTH]
-    where P: AsRef<[u8]> + ?Sized, S: AsRef<[u8]> + ?Sized
+where
+    P: AsRef<[u8]> + ?Sized,
+    S: AsRef<[u8]> + ?Sized,
 {
     let mut out = [0; defaults::LENGTH];
     let a2 = Argon2::default(Variant::Argon2d);
@@ -366,9 +391,16 @@ fn h_prime(out: &mut [u8], input: &[u8]) {
 }
 
 // from opt.c
-fn index_alpha(pass: u32, lane: u32, slice: u32, lanes: u32, sliceidx: u32,
-               slicelen: u32, j1: u32, j2: u32)
-               -> u32 {
+fn index_alpha(
+    pass: u32,
+    lane: u32,
+    slice: u32,
+    lanes: u32,
+    sliceidx: u32,
+    slicelen: u32,
+    j1: u32,
+    j2: u32,
+) -> u32 {
     let lanelen = slicelen * SLICES_PER_LANE;
     // All quotes below taken from Section 3.3 ("Indexing") of the Argon2 spec.
     let r: u32 = match (pass, slice, j2 % lanes == lane) {
@@ -503,25 +535,23 @@ fn g_two(dest: &mut Block, src: &Block) {
 
 macro_rules! p {
     ($v0v1: expr, $v2v3: expr, $v4v5: expr, $v6v7: expr,
-     $v8v9: expr, $v10v11: expr, $v12v13: expr, $v14v15: expr) => {
-        {
-            g_blake2b!($v0v1, $v4v5, $v8v9, $v12v13);
-            g_blake2b!($v2v3, $v6v7, $v10v11, $v14v15);
+     $v8v9: expr, $v10v11: expr, $v12v13: expr, $v14v15: expr) => {{
+        g_blake2b!($v0v1, $v4v5, $v8v9, $v12v13);
+        g_blake2b!($v2v3, $v6v7, $v10v11, $v14v15);
 
-            let (mut v7v4, mut v5v6) = $v4v5.cross_swap($v6v7);
-            let (mut v15v12, mut v13v14) = $v12v13.cross_swap($v14v15);
+        let (mut v7v4, mut v5v6) = $v4v5.cross_swap($v6v7);
+        let (mut v15v12, mut v13v14) = $v12v13.cross_swap($v14v15);
 
-            g_blake2b!($v0v1, v5v6, $v10v11, v15v12);
-            g_blake2b!($v2v3, v7v4, $v8v9, v13v14);
+        g_blake2b!($v0v1, v5v6, $v10v11, v15v12);
+        g_blake2b!($v2v3, v7v4, $v8v9, v13v14);
 
-            let (v4v5, v6v7) = v5v6.cross_swap(v7v4);
-            let (v12v13, v14v15) = v13v14.cross_swap(v15v12);
-            $v4v5 = v4v5;
-            $v6v7 = v6v7;
-            $v12v13 = v12v13;
-            $v14v15 = v14v15;
-        }
-    };
+        let (v4v5, v6v7) = v5v6.cross_swap(v7v4);
+        let (v12v13, v14v15) = v13v14.cross_swap(v15v12);
+        $v4v5 = v4v5;
+        $v6v7 = v6v7;
+        $v12v13 = v12v13;
+        $v14v15 = v14v15;
+    }};
 }
 
 macro_rules! g_blake2b {
@@ -536,7 +566,6 @@ macro_rules! g_blake2b {
         $b = ($b ^ $c).rotate_right(63);
     };
 }
-
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[inline(always)]
@@ -554,12 +583,12 @@ fn p_col(col: usize, b: &mut Block) {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
-    use std::io::Read;
     use super::Argon2;
     use super::{Variant, Version};
     use block;
     use std::fmt::Write;
+    use std::fs::File;
+    use std::io::Read;
 
     // from genkat.c
     const TEST_OUTLEN: usize = 32;
@@ -572,36 +601,46 @@ mod tests {
     macro_rules! wl { ($($args: expr),*) => { let _ = writeln!($($args),*); }; }
 
     fn u8info(prefix: &str, bytes: &[u8], print_length: bool) -> String {
-        let bs = bytes.iter()
-                      .fold(String::new(), |xs, b| xs + &format!("{:02x} ", b));
+        let bs = bytes
+            .iter()
+            .fold(String::new(), |xs, b| xs + &format!("{:02x} ", b));
         let len = match print_length {
             false => ": ".to_string(),
             true => format!("[{}]: ", bytes.len()),
         };
         prefix.to_string() + &len + &bs
-
     }
 
     fn block_info(i: usize, b: &block::Block) -> String {
         let blk = b.as_u64();
-        blk.iter().enumerate().fold(String::new(), |xs, (j, octword)| {
-            xs + "Block " + &format!("{:004} ", i) + &format!("[{:>3}]: ", j) +
-            &format!("{:0016x}", octword) + "\n"
-        })
+        blk.iter()
+            .enumerate()
+            .fold(String::new(), |xs, (j, octword)| {
+                xs + "Block "
+                    + &format!("{:004} ", i)
+                    + &format!("[{:>3}]: ", j)
+                    + &format!("{:0016x}", octword)
+                    + "\n"
+            })
     }
 
-    fn run_and_collect(arg: &Argon2, out: &mut [u8], p: &[u8], s: &[u8],
-                       k: &[u8], x: &[u8])
-                       -> (String, String) {
+    fn run_and_collect(
+        arg: &Argon2,
+        out: &mut [u8],
+        p: &[u8],
+        s: &[u8],
+        k: &[u8],
+        x: &[u8],
+    ) -> (String, String) {
         let (mut h0output, mut blockoutput) = (String::new(), String::new());
 
         {
             let h0fn = |h0: &[u8]| {
-                wl!(&mut h0output,
+                wl!(
+                    &mut h0output,
                     "{}",
-                    u8info("Pre-hashing digest",
-                           &h0[..super::DEF_B2HASH_LEN],
-                           false));
+                    u8info("Pre-hashing digest", &h0[..super::DEF_B2HASH_LEN], false)
+                );
             };
 
             let passfn = |p: u32, matrix: &block::Matrix| {
@@ -630,7 +669,12 @@ mod tests {
 
         let mut rv = String::new();
         wl!(rv, "=======================================");
-        wl!(rv, "{:?} version number {}", a2.variant, a2.version as usize);
+        wl!(
+            rv,
+            "{:?} version number {}",
+            a2.variant,
+            a2.version as usize
+        );
         wl!(rv, "=======================================");
         w!(rv, "Memory: {} KiB, Iterations: {}, ", a2.kib, a2.passes);
         w!(rv, "Parallelism: {} lanes, ", a2.lanes);

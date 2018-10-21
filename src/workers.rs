@@ -19,18 +19,17 @@ mod threadpool {
 
         #[inline(always)]
         pub fn map<F>(&mut self, blocks: &mut Matrix, fill_slice: &F)
-            where F: Fn(&mut Matrix, u32) + Sync
+        where
+            F: Fn(&mut Matrix, u32) + Sync,
         {
             match self {
                 &mut Workers(1, _) => fill_slice(blocks, 0),
-                &mut Workers(lanes, Some(ref mut pool)) => {
-                    pool.scoped(|sc| {
-                        for lane in 0..lanes {
-                            let m = unsafe { blocks.mut_ref() };
-                            sc.execute(move || fill_slice(m, lane));
-                        }
-                    })
-                }
+                &mut Workers(lanes, Some(ref mut pool)) => pool.scoped(|sc| {
+                    for lane in 0..lanes {
+                        let m = unsafe { blocks.mut_ref() };
+                        sc.execute(move || fill_slice(m, lane));
+                    }
+                }),
                 _ => unreachable!(),
             }
         }
@@ -49,11 +48,14 @@ mod threaded {
 
     impl Workers {
         #[inline(always)]
-        pub fn new(lanes: u32) -> Workers { Workers(lanes) }
+        pub fn new(lanes: u32) -> Workers {
+            Workers(lanes)
+        }
 
         #[inline(always)]
         pub fn map<F>(&mut self, blocks: &mut Matrix, fill_slice: &F)
-            where F: Fn(&mut Matrix, u32) + Sync
+        where
+            F: Fn(&mut Matrix, u32) + Sync,
         {
             for lane in 0..self.0 {
                 fill_slice(blocks, lane);

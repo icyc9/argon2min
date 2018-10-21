@@ -4,12 +4,12 @@
 #![feature(test)]
 #![cfg(feature = "bench_ref")]
 
-extern crate test;
 extern crate argon2rs;
 extern crate cargon;
+extern crate test;
 
-use argon2rs::{Argon2, defaults};
 use argon2rs::Variant::Argon2i;
+use argon2rs::{defaults, Argon2};
 use std::ptr;
 
 const PASSWORD: &'static [u8] = b"cargo bench --feature=simd";
@@ -45,8 +45,14 @@ fn bench_cargon_threaded(b: &mut test::Bencher) {
     b.iter(|| unsafe { cargon::argon2_ctx(&mut ctx, Argon2i as usize) });
 }
 
-fn mk_cargon(a2: Argon2, out: &mut [u8], p: &[u8], s: &[u8], k: &[u8], x: &[u8])
-             -> cargon::CargonContext {
+fn mk_cargon(
+    a2: Argon2,
+    out: &mut [u8],
+    p: &[u8],
+    s: &[u8],
+    k: &[u8],
+    x: &[u8],
+) -> cargon::CargonContext {
     let (_, kib, passes, lanes, vers) = a2.params();
     cargon::CargonContext {
         out: out.as_mut_ptr(),
@@ -76,8 +82,7 @@ fn ensure_identical_hashes() {
     fn comp(lanes: u32) {
         let mut outrs = [0; defaults::LENGTH];
         let mut outca = [0; defaults::LENGTH];
-        let a2 = Argon2::new(defaults::PASSES, lanes, defaults::KIB, Argon2i)
-            .unwrap();
+        let a2 = Argon2::new(defaults::PASSES, lanes, defaults::KIB, Argon2i).unwrap();
         a2.hash(&mut outrs, PASSWORD, SALT, &[], &[]);
 
         let mut ctx = mk_cargon(a2, &mut outca, PASSWORD, SALT, &[], &[]);

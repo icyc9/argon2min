@@ -1,9 +1,8 @@
+use argon2::{defaults, Argon2, ParamErr, Variant, Version};
+use std::error::Error;
 /// The main export here is `Encoded`. See `examples/verify.rs` for usage
 /// examples.
-
 use std::{fmt, str};
-use std::error::Error;
-use argon2::{Argon2, ParamErr, Variant, Version, defaults};
 
 macro_rules! maybe {
     ($e: expr) => {
@@ -17,7 +16,9 @@ macro_rules! maybe {
 const LUT64: &'static [u8; 64] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-fn lut(n: u8) -> u8 { LUT64[n as usize & 0x3f] }
+fn lut(n: u8) -> u8 {
+    LUT64[n as usize & 0x3f]
+}
 
 fn delut(c: u8) -> Option<u8> {
     match c {
@@ -100,8 +101,8 @@ type Parsed<T> = Result<T, usize>;
 impl<'a> Parser<'a> {
     fn expect(&mut self, exp: &[u8]) -> Parsed<()> {
         assert!(self.pos < self.enc.len());
-        if self.enc.len() - self.pos < exp.len() ||
-           &self.enc[self.pos..self.pos + exp.len()] != exp {
+        if self.enc.len() - self.pos < exp.len() || &self.enc[self.pos..self.pos + exp.len()] != exp
+        {
             self.err()
         } else {
             self.pos += exp.len();
@@ -139,25 +140,22 @@ impl<'a> Parser<'a> {
         }
         match str::from_utf8(&self.enc[self.pos..end]) {
             Err(_) => self.err(),
-            Ok(s) => {
-                match s.parse() {
-                    Err(_) => self.err(),
-                    Ok(n) => {
-                        self.pos = end;
-                        Ok(n)
-                    }
+            Ok(s) => match s.parse() {
+                Err(_) => self.err(),
+                Ok(n) => {
+                    self.pos = end;
+                    Ok(n)
                 }
-            }
+            },
         }
     }
 
     fn read_version(&mut self) -> Parsed<Version> {
-        self.read_u32()
-            .and_then(|vers| match vers {
-                          0x10 => Ok(Version::_0x10),
-                          0x13 => Ok(Version::_0x13),
-                          _ => self.err(),
-                      })
+        self.read_u32().and_then(|vers| match vers {
+            0x10 => Ok(Version::_0x10),
+            0x13 => Ok(Version::_0x13),
+            _ => self.err(),
+        })
     }
 
     fn decode64_till(&mut self, stopchar: Option<&[u8]>) -> Parsed<Vec<u8>> {
@@ -167,7 +165,8 @@ impl<'a> Parser<'a> {
                 self.enc[self.pos..]
                     .iter()
                     .take_while(|k| **k != c[0])
-                    .fold(0, |c, _| c + 1) + self.pos
+                    .fold(0, |c, _| c + 1)
+                    + self.pos
             }
         };
         match debase64_no_pad(&self.enc[self.pos..end]) {
@@ -179,7 +178,9 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn err<T>(&self) -> Parsed<T> { Err(self.pos) }
+    fn err<T>(&self) -> Parsed<T> {
+        Err(self.pos)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -225,21 +226,23 @@ pub struct Encoded {
 macro_rules! try_unit {
     ($e: expr) => {
         match $e {
-            Ok(()) => {},
-            Err(e) => return Err(e)
+            Ok(()) => {}
+            Err(e) => return Err(e),
         }
     };
 }
 
-type Packed = (Variant,
-               Version,
-               u32,
-               u32,
-               u32,
-               Vec<u8>,
-               Vec<u8>,
-               Vec<u8>,
-               Vec<u8>);
+type Packed = (
+    Variant,
+    Version,
+    u32,
+    u32,
+    u32,
+    Vec<u8>,
+    Vec<u8>,
+    Vec<u8>,
+    Vec<u8>,
+);
 
 impl Encoded {
     fn parse(encoded: &[u8]) -> Result<Packed, usize> {
@@ -300,15 +303,13 @@ impl Encoded {
             Ok((v, vers, kib, passes, lanes, key, data, salt, hash)) => {
                 match Argon2::with_version(passes, lanes, kib, v, vers) {
                     Err(e) => Err(DecodeError::InvalidParams(e)),
-                    Ok(a2) => {
-                        Ok(Encoded {
-                            params: a2,
-                            hash: hash,
-                            salt: salt,
-                            key: key,
-                            data: data,
-                        })
-                    }
+                    Ok(a2) => Ok(Encoded {
+                        params: a2,
+                        hash: hash,
+                        salt: salt,
+                        key: key,
+                        data: data,
+                    }),
                 }
             }
         }
@@ -385,7 +386,8 @@ impl Encoded {
     pub fn verify(&self, p: &[u8]) -> bool {
         let mut out = [0 as u8; defaults::LENGTH];
         let s = &self.salt[..];
-        self.params.hash(&mut out, p, s, &self.key[..], &self.data[..]);
+        self.params
+            .hash(&mut out, p, s, &self.key[..], &self.data[..]);
         constant_eq(&out, &self.hash)
     }
 
@@ -410,23 +412,25 @@ pub fn constant_eq(xs: &[u8], ys: &[u8]) -> bool {
 
 #[cfg(test)]
 mod test {
-    use super::{Encoded, base64_no_pad, debase64_no_pad};
+    use super::{base64_no_pad, debase64_no_pad, Encoded};
 
-    const BASE64_CASES: [(&'static [u8], &'static [u8]); 5] =
-        [(b"any carnal pleasure.", b"YW55IGNhcm5hbCBwbGVhc3VyZS4"),
-         (b"any carnal pleasure", b"YW55IGNhcm5hbCBwbGVhc3VyZQ"),
-         (b"any carnal pleasur", b"YW55IGNhcm5hbCBwbGVhc3Vy"),
-         (b"any carnal pleasu", b"YW55IGNhcm5hbCBwbGVhc3U"),
-         (b"any carnal pleas", b"YW55IGNhcm5hbCBwbGVhcw")];
+    const BASE64_CASES: [(&'static [u8], &'static [u8]); 5] = [
+        (b"any carnal pleasure.", b"YW55IGNhcm5hbCBwbGVhc3VyZS4"),
+        (b"any carnal pleasure", b"YW55IGNhcm5hbCBwbGVhc3VyZQ"),
+        (b"any carnal pleasur", b"YW55IGNhcm5hbCBwbGVhc3Vy"),
+        (b"any carnal pleasu", b"YW55IGNhcm5hbCBwbGVhc3U"),
+        (b"any carnal pleas", b"YW55IGNhcm5hbCBwbGVhcw"),
+    ];
 
-    const ENCODED: &'static [&'static [u8]] =
-        &[b"$argon2i$m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
+    const ENCODED: &'static [&'static [u8]] = &[
+        b"$argon2i$m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
             $Eh1lW3mjkhlMLRQdE7vXZnvwDXSGLBfXa6BGK4a1J3s",
-          // ^ ensures that default version is 0x10.
-          b"$argon2i$v=16,m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
+        // ^ ensures that default version is 0x10.
+        b"$argon2i$v=16,m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
             $Eh1lW3mjkhlMLRQdE7vXZnvwDXSGLBfXa6BGK4a1J3s",
-          b"$argon2i$v=19,m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
-            $AvsXI+N78kGHzeGwzz0VTjfBdl7MmgvBGfJ/XXyqLbA"];
+        b"$argon2i$v=19,m=4096,t=3,p=1$dG9kbzogZnV6eiB0ZXN0cw\
+            $AvsXI+N78kGHzeGwzz0VTjfBdl7MmgvBGfJ/XXyqLbA",
+    ];
 
     #[test]
     fn test_base64_no_pad() {
@@ -455,7 +459,7 @@ mod test {
     fn encode_decode() {
         for &(s, _) in BASE64_CASES.iter() {
             let salt = b"Yum!  Extra salty";
-            let key  = b"ff5dfa4d7a048f9db4ad0caad82e75c";
+            let key = b"ff5dfa4d7a048f9db4ad0caad82e75c";
             let enc = Encoded::default2i(s, salt, key, &[]);
             assert_eq!(Encoded::from_u8(&enc.to_u8()), Ok(enc));
         }
@@ -465,17 +469,26 @@ mod test {
     fn bad_encoded() {
         use super::DecodeError::*;
         use argon2::ParamErr::*;
-        let cases: &[(&'static [u8], super::DecodeError)] =
-            &[(b"$argon2y$v=19,m=4096", ParseError(7)),
-              (b"$argon2i$v=19,m=-2,t=-4,p=-4$aaaaaaaa$ffffff", ParseError(16)),
-              // ^ negative m is invalid.
-              (b"$argon2i$v=19,m=0,t=0,p=0$aaaaaaaa$ffffff*", ParseError(35)),
-              // ^ asterisk is invalid base64 char.
-              (b"$argon2i$v=19,m=0,t=0,p=0$aaaaaaaa$ffffff",
-               InvalidParams(TooFewPasses)),
-              // ^ p = 0 is invalid.
-              (b"$argon2i$m", ParseError(9))];
-              // ^ intentionally fail Encoded::expect with undersized input
+        let cases: &[(&'static [u8], super::DecodeError)] = &[
+            (b"$argon2y$v=19,m=4096", ParseError(7)),
+            (
+                b"$argon2i$v=19,m=-2,t=-4,p=-4$aaaaaaaa$ffffff",
+                ParseError(16),
+            ),
+            // ^ negative m is invalid.
+            (
+                b"$argon2i$v=19,m=0,t=0,p=0$aaaaaaaa$ffffff*",
+                ParseError(35),
+            ),
+            // ^ asterisk is invalid base64 char.
+            (
+                b"$argon2i$v=19,m=0,t=0,p=0$aaaaaaaa$ffffff",
+                InvalidParams(TooFewPasses),
+            ),
+            // ^ p = 0 is invalid.
+            (b"$argon2i$m", ParseError(9)),
+        ];
+        // ^ intentionally fail Encoded::expect with undersized input
 
         for &(case, err) in cases.iter() {
             let v = Encoded::from_u8(case);

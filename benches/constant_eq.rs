@@ -2,8 +2,8 @@
 // run time of `verifier::constant_eq` is independent of its inputs.
 #![feature(test)]
 
-extern crate test;
 extern crate argon2rs;
+extern crate test;
 use argon2rs::verifier::constant_eq;
 
 #[bench]
