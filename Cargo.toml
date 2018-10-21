@@ -10,11 +10,11 @@ keywords = ["crypto", "argon2", "argon2i", "argon2d", "hash"]
 license = "MIT"
 
 [features]
-bench_ref = []
+bench_ref = ["cargon"]
 
 [dependencies]
 blake2-rfc = "0.2.18"
 
-[dev-dependencies.cargon]
+[dependencies.cargon]
 path = "benches/cargon"
-version = "0.0.1"
+optional = true
