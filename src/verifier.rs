@@ -342,15 +342,13 @@ impl Encoded {
 
     /// Serialize this hashing session into raw bytes that can later be
     /// recovered by `Encoded::from_u8`.
-    #[cfg_attr(rustfmt, rustfmt_skip)]
     pub fn to_u8(&self) -> Vec<u8> {
         let vcode = |v| match v {
             Variant::Argon2i => "i",
             Variant::Argon2d => "d",
             Variant::Argon2id => "id",
         };
-        let b64 = |x| String::from_utf8(base64_no_pad(x)).unwrap()
-;
+        let b64 = |x| String::from_utf8(base64_no_pad(x)).unwrap();
         let k_ = match &b64(&self.key[..]) {
             bytes if bytes.len() > 0 => format!(",keyid={}", bytes),
             _ => String::new(),
@@ -360,10 +358,19 @@ impl Encoded {
             _ => String::new(),
         };
         let (var, m, t, p, vers) = self.params();
-        format!("$argon2{}$v={},m={},t={},p={}{}{}${}${}", vcode(var),
-                vers as usize, m, t, p, k_, x_, b64(&self.salt[..]),
-                b64(&self.hash))
-            .into_bytes()
+        format!(
+            "$argon2{}$v={},m={},t={},p={}{}{}${}${}",
+            vcode(var),
+            vers as usize,
+            m,
+            t,
+            p,
+            k_,
+            x_,
+            b64(&self.salt[..]),
+            b64(&self.hash)
+        )
+        .into_bytes()
     }
 
     /// Generates a new hashing session from password, salt, and other byte

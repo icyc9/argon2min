@@ -56,10 +56,18 @@ macro_rules! b2hash {
     };
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
-fn h0(lanes: u32, hash_length: u32, memory_kib: u32, passes: u32, version: u32,
-      variant: Variant, p: &[u8], s: &[u8], k: &[u8], x: &[u8])
-      -> [u8; 72] {
+fn h0(
+    lanes: u32,
+    hash_length: u32,
+    memory_kib: u32,
+    passes: u32,
+    version: u32,
+    variant: Variant,
+    p: &[u8],
+    s: &[u8],
+    k: &[u8],
+    x: &[u8],
+) -> [u8; 72] {
     let mut rv = [0 as u8; 72];
     b2hash!(&mut rv[0..DEF_B2HASH_LEN];
             &as32le(lanes), &as32le(hash_length), &as32le(memory_kib),
@@ -192,25 +200,42 @@ impl Argon2 {
         self.hash_impl(out, p, s, k, x, |_| {}, |_, _| {});
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn hash_impl<F, G>(&self, out: &mut [u8], p: &[u8], s: &[u8], k: &[u8],
-                       x: &[u8], mut h0_fn: F, mut pass_fn: G)
-        where F: FnMut(&[u8]),
-              G: FnMut(u32, &Matrix)
+    fn hash_impl<F, G>(
+        &self,
+        out: &mut [u8],
+        p: &[u8],
+        s: &[u8],
+        k: &[u8],
+        x: &[u8],
+        mut h0_fn: F,
+        mut pass_fn: G,
+    ) where
+        F: FnMut(&[u8]),
+        G: FnMut(u32, &Matrix),
     {
         assert!(4 <= out.len() && out.len() <= 0xffffffff);
         assert!(p.len() <= 0xffffffff);
-        assert!(8 <= s.len()  && s.len() <= 0xffffffff);
+        assert!(8 <= s.len() && s.len() <= 0xffffffff);
         assert!(k.len() <= 32);
         assert!(x.len() <= 0xffffffff);
 
         let mut blocks = Matrix::new(self.lanes, self.lanelen);
-        let h0 = h0(self.lanes, out.len() as u32, self.kib, self.passes,
-                    self.version as u32, self.variant, p, s, k, x);
-        h0_fn(&h0);  // kats
+        let h0 = h0(
+            self.lanes,
+            out.len() as u32,
+            self.kib,
+            self.passes,
+            self.version as u32,
+            self.variant,
+            p,
+            s,
+            k,
+            x,
+        );
+        h0_fn(&h0); // kats
 
         for lane in 0..self.lanes {
-               self.fill_first_slice(&mut blocks, h0, lane);
+            self.fill_first_slice(&mut blocks, h0, lane);
         }
 
         // finish first pass. slices have to be filled in sync.
@@ -219,7 +244,7 @@ impl Argon2 {
                 self.fill_slice(&mut blocks, 0, lane, slice, 0);
             }
         }
-        pass_fn(0, &blocks);  // kats
+        pass_fn(0, &blocks); // kats
 
         for p in 1..self.passes {
             for slice in 0..SLICES_PER_LANE {
@@ -227,7 +252,7 @@ impl Argon2 {
                     self.fill_slice(&mut blocks, p, lane, slice, 0);
                 }
             }
-            pass_fn(p, &blocks);  // kats
+            pass_fn(p, &blocks); // kats
         }
 
         h_prime(out, &blocks.xor_column(self.lanelen - 1).as_u8());
@@ -266,12 +291,16 @@ impl Argon2 {
         self.fill_slice(blks, 0, lane, 0, 2);
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn fill_slice(&self, blks: &mut Matrix, pass: u32, lane: u32, slice: u32,
-                  offset: u32) {
-        let mut jgen = Gen2i::new(offset as usize, pass, lane, slice,
-                                  self.lanes * self.lanelen, self.passes,
-                                  self.variant);
+    fn fill_slice(&self, blks: &mut Matrix, pass: u32, lane: u32, slice: u32, offset: u32) {
+        let mut jgen = Gen2i::new(
+            offset as usize,
+            pass,
+            lane,
+            slice,
+            self.lanes * self.lanelen,
+            self.passes,
+            self.variant,
+        );
         let slicelen = self.lanelen / SLICES_PER_LANE;
 
         use Variant::*;
@@ -282,12 +311,12 @@ impl Argon2 {
                 Argon2d => {
                     let col = self.prev(slice * slicelen + idx);
                     split_u64((blks[(lane, col)])[0].0)
-                },
+                }
                 Argon2id if pass == 0 && slice < 2 => jgen.nextj(),
                 Argon2id => {
                     let col = self.prev(slice * slicelen + idx);
                     split_u64((blks[(lane, col)])[0].0)
-                },
+                }
             };
             self.fill_block(blks, pass, lane, slice, idx, j1, j2);
         }
@@ -437,15 +466,27 @@ struct Gen2i {
 }
 
 impl Gen2i {
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn new(start_at: usize, pass: u32, lane: u32, slice: u32, totblocks: u32,
-           totpasses: u32, variant: Variant)
-           -> Gen2i {
+    fn new(
+        start_at: usize,
+        pass: u32,
+        lane: u32,
+        slice: u32,
+        totblocks: u32,
+        totpasses: u32,
+        variant: Variant,
+    ) -> Gen2i {
         use block::zero;
 
-        let mut rv = Gen2i { arg: zero(), pseudos: zero(), idx: start_at };
-        let args = [(pass, lane), (slice, totblocks),
-                    (totpasses, variant as u32)];
+        let mut rv = Gen2i {
+            arg: zero(),
+            pseudos: zero(),
+            idx: start_at,
+        };
+        let args = [
+            (pass, lane),
+            (slice, totblocks),
+            (totpasses, variant as u32),
+        ];
         for (k, &(lo, hi)) in rv.arg.iter_mut().zip(args.into_iter()) {
             *k = u64x2(lo as u64, hi as u64);
         }
@@ -566,18 +607,32 @@ macro_rules! g_blake2b {
     };
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
 #[inline(always)]
 fn p_row(row: usize, b: &mut Block) {
-    p!(b[8 * row + 0], b[8 * row + 1], b[8 * row + 2], b[8 * row + 3],
-       b[8 * row + 4], b[8 * row + 5], b[8 * row + 6], b[8 * row + 7]);
+    p!(
+        b[8 * row + 0],
+        b[8 * row + 1],
+        b[8 * row + 2],
+        b[8 * row + 3],
+        b[8 * row + 4],
+        b[8 * row + 5],
+        b[8 * row + 6],
+        b[8 * row + 7]
+    );
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
 #[inline(always)]
 fn p_col(col: usize, b: &mut Block) {
-    p!(b[8 * 0 + col], b[8 * 1 + col], b[8 * 2 + col], b[8 * 3 + col],
-       b[8 * 4 + col], b[8 * 5 + col], b[8 * 6 + col], b[8 * 7 + col]);
+    p!(
+        b[8 * 0 + col],
+        b[8 * 1 + col],
+        b[8 * 2 + col],
+        b[8 * 3 + col],
+        b[8 * 4 + col],
+        b[8 * 5 + col],
+        b[8 * 6 + col],
+        b[8 * 7 + col]
+    );
 }
 
 #[cfg(test)]
