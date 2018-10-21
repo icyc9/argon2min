@@ -10,22 +10,6 @@ password-based key derivation.
 
 [Documentation](http://bryant.github.io/argon2rs/argon2rs/)
 
-## Installation
-
-Via cargo:
-
-```bash
-$ cd $PROJECT_ROOT
-$ cargo install --features "simd"
-```
-
-From git:
-
-```bash
-$ git clone https://github.com/bryant/argon2rs $ARGON_DIR && cd $ARGON_DIR
-$ cargo build --features "simd"
-```
-
 ## Usage
 
 From `examples/helloworld.rs`:
@@ -60,11 +44,9 @@ for password hashing.
 ## TODO
 
 - [x] Parallelize.
-- [x] Incorporate SIMD into compression function.
 - [x] Zero-on-drop trait for sensitive(s): `Matrix`
 - [x] Constant-time verification API.
 - [x] Benchmarks.
-- [ ] Support NEON and SIMD on other arches.
 - [ ] Fuzz.
 - [ ] Prove safety of unchecked accesses in `Block`, `Matrix`.
 
@@ -86,7 +68,7 @@ $ rustc --version
 rustc 1.11.0-dev (4b240fe96 2016-06-08)
 
 $ export RUSTFLAGS='-C target-feature=+avx'
-$ cargo bench --features="simd bench_ref"
+$ cargo bench --features="bench_ref"
 
 # output trimmed for brevity
 

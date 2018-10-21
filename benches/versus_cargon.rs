@@ -12,7 +12,7 @@ use argon2rs::Variant::Argon2i;
 use argon2rs::{defaults, Argon2};
 use std::ptr;
 
-const PASSWORD: &'static [u8] = b"cargo bench --feature=simd";
+const PASSWORD: &'static [u8] = b"cargo bench --feature=confusion";
 const SALT: &'static [u8] = b"cargo test --release";
 
 #[bench]

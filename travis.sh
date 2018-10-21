@@ -13,10 +13,10 @@ then
     then
         echo "=== benching with '-C target-feature=+avx' ==="
         export RUSTFLAGS='-C target-feature=+avx'
-        cargo clean && cargo bench --features "simd bench_ref"
+        cargo clean && cargo bench --features "bench_ref"
     fi
 
     unset RUSTFLAGS
     echo "=== benching without avx ==="
-    cargo clean && cargo bench --features "simd bench_ref"
+    cargo clean && cargo bench --features "bench_ref"
 fi
