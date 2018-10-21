@@ -399,6 +399,20 @@ where
     out
 }
 
+/// Convenience wrapper around Argon2i for the majority of use cases where only
+/// a password and salt are supplied. Note that a salt between 8 and 2^32 - 1
+/// bytes must be provided.
+pub fn argon2id_simple<P, S>(password: &P, salt: &S) -> [u8; defaults::LENGTH]
+    where
+        P: AsRef<[u8]> + ?Sized,
+        S: AsRef<[u8]> + ?Sized,
+{
+    let mut out = [0; defaults::LENGTH];
+    let a2 = Argon2::default(Variant::Argon2id);
+    a2.hash(&mut out, password.as_ref(), salt.as_ref(), &[], &[]);
+    out
+}
+
 fn h_prime(out: &mut [u8], input: &[u8]) {
     if out.len() <= DEF_B2HASH_LEN {
         b2hash!(out; &len32(out), input);
