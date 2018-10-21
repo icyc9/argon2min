@@ -248,15 +248,6 @@ pub struct Encoded {
     data: Vec<u8>,
 }
 
-macro_rules! try_unit {
-    ($e: expr) => {
-        match $e {
-            Ok(()) => {}
-            Err(e) => return Err(e),
-        }
-    };
-}
-
 type Packed = (
     Variant,
     Version,
@@ -276,7 +267,7 @@ impl Encoded {
             pos: 0,
         };
 
-        try_unit!(p.expect(b"$argon2"));
+        p.expect(b"$argon2")?;
 
         let variant = match p.read_until('$' as u8) {
             b"d" => Variant::Argon2d,
@@ -285,24 +276,24 @@ impl Encoded {
             x => return Err(p.pos - x.len()),
         };
 
-        try_unit!(p.expect(b"$"));
+        p.expect(b"$")?;
         let vers = match p.expect(b"v=") {
             // Match the c reference impl's behavior, which defaults to a v0x10
             // hash encoding since the `v=` field was only introduced with
             // v0x13.
             Err(_) => Version::_0x10,
             Ok(()) => {
-                let vers = try!(p.read_version());
-                try_unit!(p.expect(b","));
+                let vers = p.read_version()?;
+                p.expect(b",")?;
                 vers
             }
         };
-        try_unit!(p.expect(b"m="));
-        let kib = try!(p.read_u32());
-        try_unit!(p.expect(b",t="));
-        let passes = try!(p.read_u32());
-        try_unit!(p.expect(b",p="));
-        let lanes = try!(p.read_u32());
+        p.expect(b"m=")?;
+        let kib = p.read_u32()?;
+        p.expect(b",t=")?;
+        let passes = p.read_u32()?;
+        p.expect(b",p=")?;
+        let lanes = p.read_u32()?;
 
         let key = match p.expect(b",keyid=") {
             Err(_) => vec![],
@@ -314,9 +305,9 @@ impl Encoded {
             Err(_) => vec![],
         };
 
-        try_unit!(p.expect(b"$"));
+        p.expect(b"$")?;
         let salt = p.decode64_till(Some(b'$'))?;
-        try_unit!(p.expect(b"$"));
+        p.expect(b"$")?;
         let hash = p.decode64_till(None)?;
         Ok((variant, vers, kib, passes, lanes, key, data, salt, hash))
     }
