@@ -4,7 +4,7 @@ cargo build
 cargo test
 
 # test single-threaded
-cargo test --no-default-features
+cargo test
 
 # benches use `extern crate test` which requires nightly.
 if [ "$TRAVIS_RUST_VERSION" = "nightly" ]

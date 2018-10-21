@@ -43,7 +43,6 @@ for password hashing.
 
 ## TODO
 
-- [x] Parallelize.
 - [x] Zero-on-drop trait for sensitive(s): `Matrix`
 - [x] Constant-time verification API.
 - [x] Benchmarks.
@@ -52,7 +51,7 @@ for password hashing.
 
 ## Benchmarks
 
-Our primary benchmarks are single- and multi-threaded runs of Argon2i with
+Our primary benchmarks are single-threaded runs of Argon2i with
 default parameters against the [reference implementation][2]. In order to
 compile and run this, first pull in the C sources:
 
@@ -64,9 +63,6 @@ $ git submodule update benches/cargon/phc-winner-argon2
 and then benchmark with Cargo as usual:
 
 ```
-$ rustc --version
-rustc 1.11.0-dev (4b240fe96 2016-06-08)
-
 $ export RUSTFLAGS='-C target-feature=+avx'
 $ cargo bench --features="bench_ref"
 
@@ -77,9 +73,7 @@ $ cargo bench --features="bench_ref"
 running 5 tests
 test ensure_identical_hashes ... ignored
 test bench_argon2rs_i        ... bench:   9,547,031 ns/iter (+/- 15,964)
-test bench_argon2rs_threaded ... bench:   4,584,163 ns/iter (+/- 398,803)
 test bench_cargon_i          ... bench:  10,013,015 ns/iter (+/- 177,482)
-test bench_cargon_threaded   ... bench:   3,753,022 ns/iter (+/- 48,688)
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 2 measured
 ```
