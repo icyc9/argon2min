@@ -72,8 +72,8 @@ $ cargo bench --features="bench_ref"
 
 running 5 tests
 test ensure_identical_hashes ... ignored
-test bench_argon2rs_i        ... bench:   9,547,031 ns/iter (+/- 15,964)
-test bench_cargon_i          ... bench:  10,013,015 ns/iter (+/- 177,482)
+test bench_argon2rs_i ... bench:   6,856,774 ns/iter (+/- 197,405)
+test bench_cargon_i   ... bench:   3,856,783 ns/iter (+/- 142,580)
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 2 measured
 ```
